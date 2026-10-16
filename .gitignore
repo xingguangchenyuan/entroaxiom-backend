@@ -1,0 +1,16 @@
+.env
+deploy/.env
+data/
+uploads/
+backups/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite3
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+.idea/
+.vscode/

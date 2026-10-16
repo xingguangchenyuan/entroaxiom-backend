@@ -1,0 +1,13 @@
+# 运行依赖（版本范围：允许小版本更新，禁止跨大版本。上线前建议 pip freeze 一份锁定版本）
+fastapi>=0.115,<1.0
+uvicorn[standard]>=0.30,<1.0
+sqlalchemy>=2.0.30,<2.1
+alembic>=1.13,<2.0
+pydantic>=2.7,<3.0
+pydantic-settings>=2.3,<3.0
+argon2-cffi>=23.1
+itsdangerous>=2.2,<3.0
+python-multipart>=0.0.9
+tzdata>=2024.1
+# 可选：中文标题自动转拼音 slug（不装则中文标题得到 note-xxxxxx 形式的 id）
+pypinyin>=0.51

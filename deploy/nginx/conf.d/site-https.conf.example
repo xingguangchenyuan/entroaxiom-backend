@@ -1,0 +1,99 @@
+# HTTPS 版本：把 example.com 换成你的域名，去掉 .example 后缀启用，同时移除 site.conf。
+# 证书签发（首次，先用 site.conf 启动、域名已解析到本机后，在 deploy/ 目录执行）：
+#   docker run --rm -v "$PWD/certbot/conf:/etc/letsencrypt" -v "$PWD/certbot/www:/var/www/certbot" \
+#     certbot/certbot certonly --webroot -w /var/www/certbot -d example.com
+# 续期：同样的命令把 certonly 换成 renew，然后 docker compose exec nginx nginx -s reload（可放进 cron）。
+
+limit_req_zone $binary_remote_addr zone=login:10m rate=10r/m;
+
+server {
+    listen 80;
+    server_name example.com;
+    server_tokens off;
+
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name example.com;
+    server_tokens off;
+
+    ssl_certificate     /etc/letsencrypt/live/example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/example.com/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:SSL:10m;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+
+    add_header X-Content-Type-Options nosniff always;
+    add_header Referrer-Policy same-origin always;
+
+    # 登录：Nginx 层再限一次频（后端另有失败次数锁定）
+    location = /api/auth/login {
+        limit_req zone=login burst=5 nodelay;
+        limit_req_status 429;
+        include /etc/nginx/conf.d/proxy_params.inc;
+        proxy_pass http://backend:8000;
+    }
+
+    # 默认单文件 50 MiB；后端另限制实际字节数与 multipart 开销。改 MAX_UPLOAD_MB 时同步改这里。
+    location = /api/admin/files {
+        client_max_body_size 51m;
+        client_body_timeout 30s;
+        proxy_http_version 1.1;
+        proxy_request_buffering off;
+        include /etc/nginx/conf.d/proxy_params.inc;
+        proxy_pass http://backend:8000;
+    }
+
+    location /api/ {
+        client_max_body_size 4m;   # 笔记正文最多 100 万字（UTF-8 下约 3MB）
+        include /etc/nginx/conf.d/proxy_params.inc;
+        proxy_pass http://backend:8000;
+    }
+
+    # 公开文件：Nginx 直接读磁盘提供。以点开头的文件（上传中的临时文件）一律 404。
+    # 正则 location 优先于下面的前缀 location，所以这条放在前面生效。
+    location ~ ^/uploads/public/\. {
+        return 404;
+    }
+    location /uploads/public/ {
+        alias /srv/uploads/public/;
+        autoindex off;
+        add_header X-Content-Type-Options nosniff always;
+        add_header Cache-Control "no-store" always;
+        add_header Strict-Transport-Security "max-age=31536000" always;
+        # PDF 预览需要被同源页面内嵌
+        add_header X-Frame-Options SAMEORIGIN always;
+        # 文件不存在时 alias 目录会自然返回 404（alias 与 try_files 混用有已知坑，这里不用）
+    }
+
+    # 只有 uploads/public 被挂进容器，其他 /uploads/* 路径无对应文件
+    location /uploads/ {
+        return 404;
+    }
+
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        add_header Strict-Transport-Security "max-age=31536000" always;
+        add_header X-Content-Type-Options nosniff always;
+        try_files $uri =404;
+    }
+
+    # 前端单页应用：未知路径回到 index.html，由前端路由处理
+    location / {
+        try_files $uri /index.html;
+    }
+}
