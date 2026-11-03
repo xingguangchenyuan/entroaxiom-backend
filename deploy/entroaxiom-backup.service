@@ -1,0 +1,35 @@
+# /etc/systemd/system/entroaxiom-backup.service
+#
+# 与 entroaxiom-api 共用同一个 env 文件（/etc/entroaxiom/api.env），
+# 因为 DATABASE_URL / UPLOAD_ROOT / BACKUP_ROOT 都在里面；不要在别处再写一份。
+[Unit]
+Description=Entroaxiom snapshot backup (database + uploads)
+Documentation=file:///srv/entroaxiom/api/docs/DEPLOY.md
+After=network-online.target postgresql.service
+
+[Service]
+Type=oneshot
+User=entroaxiom
+Group=entroaxiom
+EnvironmentFile=/etc/entroaxiom/api.env
+# /run 是 root 所有，服务用户无法在里面直接建锁文件；让 systemd 建一个
+# 属于 entroaxiom 的运行时目录，锁文件放在里面（tmpfs，重启即清空）。
+RuntimeDirectory=entroaxiom
+RuntimeDirectoryMode=0750
+ExecStart=/usr/bin/flock -w 3600 /run/entroaxiom/backup.lock /srv/entroaxiom/api/deploy/backup.sh
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7
+UMask=0077
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/entroaxiom/shared /var/log/entroaxiom /run
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+
+StandardOutput=append:/var/log/entroaxiom/backup.log
+StandardError=append:/var/log/entroaxiom/backup.log

@@ -1,0 +1,56 @@
+# /etc/systemd/system/entroaxiom-api.service
+#
+# 安装：sudo cp deploy/entroaxiom-api.service /etc/systemd/system/
+#       sudo systemctl daemon-reload && sudo systemctl enable --now entroaxiom-api
+#
+# 需要提前存在（见 docs/DEPLOY.md 第 3 步）：
+#   /etc/entroaxiom/api.env            生产环境变量，root:root 600
+#   /srv/entroaxiom/api                后端源码 + dist/ + node_modules（root 所有，本服务只读）
+#   /srv/entroaxiom/shared/uploads     公开/私密上传目录（entroaxiom 可写）
+#   /srv/entroaxiom/shared/imports     导入临时目录（entroaxiom 可写）
+#   /srv/entroaxiom/shared/backups     备份输出（entroaxiom 可写）
+#   /var/log/entroaxiom                日志目录（entroaxiom 可写）
+[Unit]
+Description=Entroaxiom API (Fastify)
+Documentation=file:///srv/entroaxiom/api/docs/DEPLOY.md
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=entroaxiom
+Group=entroaxiom
+# 必须与 docs/DEPLOY.md 的目录规划一致；目录不存在 systemd 会直接失败
+WorkingDirectory=/srv/entroaxiom/api
+# 唯一的 env 文件路径，不要在部署里再出现第二个
+EnvironmentFile=/etc/entroaxiom/api.env
+Environment=NODE_ENV=production
+# 2C2G 机器：单进程 + 384MB 堆上限，其余留给 PostgreSQL 与系统
+# 若目标机上 `command -v node` 不是 /usr/bin/node，请改成实际路径
+ExecStart=/usr/bin/node --max-old-space-size=384 dist/server.js
+Restart=on-failure
+RestartSec=3
+# 优雅关闭：先 SIGTERM，给 20 秒收尾
+KillSignal=SIGTERM
+TimeoutStopSec=20
+
+# 收紧权限：只有共享目录与日志可写，源码目录保持只读
+# 注意：ReadWritePaths 里列出的路径必须真实存在，否则沙箱启动失败
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/srv/entroaxiom/shared /var/log/entroaxiom
+ProtectKernelTunables=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=true
+LockPersonality=true
+UMask=0027
+
+StandardOutput=append:/var/log/entroaxiom/api.log
+StandardError=append:/var/log/entroaxiom/api.log
+
+[Install]
+WantedBy=multi-user.target

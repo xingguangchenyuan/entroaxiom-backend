@@ -1,0 +1,43 @@
+{
+  "name": "entroaxiom-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "ENTROAXIOM 站点与管理后台后端服务（Fastify 5 + PostgreSQL 16）",
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "dev": "tsx watch src/server.ts",
+    "migrate": "tsx src/scripts/migrate.ts",
+    "admin:init": "tsx src/scripts/create-admin.ts",
+    "admin:password": "tsx src/scripts/new-password.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test \"tests/unit/**/*.test.ts\"",
+    "test:integration": "node --import tsx --test tests/integration/*.test.ts",
+    "test:all": "node --import tsx --test tests/unit/*.test.ts tests/integration/*.test.ts"
+  },
+  "dependencies": {
+    "@fastify/cookie": "^11.1.5",
+    "@fastify/multipart": "^10.1.6",
+    "@fastify/static": "^8.3.0",
+    "@node-rs/argon2": "^2.2.2",
+    "fastify": "^5.12.7",
+    "kysely": "^0.29.8",
+    "pg": "^8.23.1",
+    "yauzl": "^3.4.0",
+    "yazl": "^3.3.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.14",
+    "@electric-sql/pglite-socket": "^0.2.17",
+    "@types/node": "^26.6.6",
+    "@types/pg": "^8.23.1",
+    "@types/yauzl": "^3.4.0",
+    "@types/yazl": "^2.4.6",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3"
+  }
+}

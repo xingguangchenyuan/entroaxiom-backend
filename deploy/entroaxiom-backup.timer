@@ -1,0 +1,13 @@
+# /etc/systemd/system/entroaxiom-backup.timer
+[Unit]
+Description=Daily Entroaxiom snapshot backup
+
+[Timer]
+# 每天 03:30（服务器本地时区）跑一次；宕机错过的会开机后补跑
+OnCalendar=*-*-* 03:30:00
+Persistent=true
+RandomizedDelaySec=600
+Unit=entroaxiom-backup.service
+
+[Install]
+WantedBy=timers.target
