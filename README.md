@@ -166,7 +166,7 @@ npm run typecheck
 
 ## 部署
 
-完整手册见 [`docs/DEPLOY.md`](docs/DEPLOY.md)，实际生产记录（主机、证书、目录、偏离项、上线后发现并修掉的问题）见 [`docs/DEPLOYMENT-RECORD.md`](docs/DEPLOYMENT-RECORD.md)。
+完整手册见 [`docs/DEPLOY.md`](docs/DEPLOY.md)，实际生产记录（规格、目录、偏离项、上线后发现并修掉的问题；公网 IP 与运维账号已隐去）见 [`docs/DEPLOYMENT-RECORD.md`](docs/DEPLOYMENT-RECORD.md)。
 
 拓扑：两个域名共用一套后端。
 
@@ -192,7 +192,7 @@ npm run typecheck
 | --- | --- |
 | [`docs/DEPLOY.md`](docs/DEPLOY.md) | 从空机器到上线：PG16、目录权限、env、构建、systemd、Nginx、证书、备份恢复 |
 | [`docs/ACCEPTANCE.md`](docs/ACCEPTANCE.md) | 手工验收清单（ZIP 导入、备份演练、可见性矩阵） |
-| [`docs/DEPLOYMENT-RECORD.md`](docs/DEPLOYMENT-RECORD.md) | 这台生产机的实际记录：规格、目录、账号位置、与手册的偏离、上线后修复 |
+| [`docs/DEPLOYMENT-RECORD.md`](docs/DEPLOYMENT-RECORD.md) | 这台生产机的实际记录：规格、目录、与手册的偏离、上线后修复（公网 IP、账号与密钥文件名已隐去） |
 
 ## 与方案的差异、未实现项
 
