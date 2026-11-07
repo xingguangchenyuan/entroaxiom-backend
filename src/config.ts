@@ -37,6 +37,14 @@ export interface AppConfig {
   allowedExtensions: string[];
   maxConcurrentUploads: number;
   shortBodyChars: number;
+  /** 日志中心读取的日志文件。服务器上是固定的系统路径，本地开发用环境变量指到样例文件。 */
+  logAccessPath: string;
+  logErrorPath: string;
+  logApiPath: string;
+  logBackupPath: string;
+  /** Cloudflare 凭据：只在服务器注入，缺失时日志中心明确显示“未配置”，不做任何猜测。 */
+  cloudflareApiToken: string | null;
+  cloudflareZoneId: string | null;
 }
 
 export class ConfigError extends Error {
@@ -193,7 +201,13 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, cwd: string = p
       .map(item => item.trim().toLowerCase().replace(/^\./, ""))
       .filter(item => item.length > 0),
     maxConcurrentUploads: readInt(env, "MAX_CONCURRENT_UPLOADS", 3, problems, 1, 32),
-    shortBodyChars: readInt(env, "SHORT_BODY_CHARS", 50, problems, 1, 100_000)
+    shortBodyChars: readInt(env, "SHORT_BODY_CHARS", 50, problems, 1, 100_000),
+    logAccessPath: readString(env, "LOG_ACCESS_PATH") ?? "/var/log/nginx/access.log",
+    logErrorPath: readString(env, "LOG_ERROR_PATH") ?? "/var/log/nginx/error.log",
+    logApiPath: readString(env, "LOG_API_PATH") ?? "/var/log/entroaxiom/api.log",
+    logBackupPath: readString(env, "LOG_BACKUP_PATH") ?? "/var/log/entroaxiom/backup.log",
+    cloudflareApiToken: readString(env, "CLOUDFLARE_API_TOKEN") ?? null,
+    cloudflareZoneId: readString(env, "CLOUDFLARE_ZONE_ID") ?? null
   };
 
   if (config.nodeEnv === "production") {

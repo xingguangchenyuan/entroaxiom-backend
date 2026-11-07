@@ -8,6 +8,7 @@ import { registerAdminShelfRoutes } from "./admin/shelf.js";
 import { registerAdminGuestbookRoutes } from "./admin/guestbook.js";
 import { registerAdminModerationRoutes } from "./admin/moderation.js";
 import { registerAdminImportRoutes } from "./admin/imports.js";
+import { registerAdminLogRoutes } from "./admin/logs.js";
 
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await registerPublicRoutes(app);
@@ -19,4 +20,5 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await registerAdminGuestbookRoutes(app);
   await registerAdminModerationRoutes(app);
   await registerAdminImportRoutes(app);
+  await registerAdminLogRoutes(app);
 }
